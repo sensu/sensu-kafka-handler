@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-{{ .GithubProject }}
+sensu-kafa-handler
 
 # Test binary, build with `go test -c`
 *.test
