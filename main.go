@@ -15,10 +15,10 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	KafkaURL   string
-	KafkaTopic string
-	Verbose    bool
-	Dryrun     bool
+	host    string
+	topic   string
+	verbose bool
+	dryrun  bool
 }
 
 var (
@@ -32,41 +32,41 @@ var (
 
 	options = []*sensu.PluginConfigOption{
 		&sensu.PluginConfigOption{
-			Env:       "KAFKA_URL",
-			Argument:  "kafka-url",
-			Shorthand: "u",
+			Env:       "KAFKA_HOST",
+			Argument:  "host",
+			Shorthand: "H",
 			Default:   "localhost:9092",
-			Usage:     "The Kafka broker url",
-			Value:     &plugin.KafkaURL,
+			Usage:     "The Kafka broker host, defaults to value of KAFKA_HOST env variable",
+			Value:     &plugin.host,
 		},
 		&sensu.PluginConfigOption{
 			Env:       "KAFKA_TOPIC",
 			Argument:  "topic",
 			Shorthand: "t",
 			Default:   "sensu-event",
-			Usage:     "Kafka topic to post to",
-			Value:     &plugin.KafkaTopic,
+			Usage:     "Kafka topic to post to, defaults to value of KAFKA_TOPIC env variable",
+			Value:     &plugin.topic,
 		},
 		&sensu.PluginConfigOption{
 			Argument:  "verbose",
 			Shorthand: "v",
 			Default:   false,
 			Usage:     "Verbose output to stdout, useful for testing",
-			Value:     &plugin.Verbose,
+			Value:     &plugin.verbose,
 		},
 		&sensu.PluginConfigOption{
 			Argument:  "dryrun",
 			Shorthand: "n",
 			Default:   false,
 			Usage:     "Dryrun, do not connect to Kafka broker",
-			Value:     &plugin.Dryrun,
+			Value:     &plugin.dryrun,
 		},
 	}
 )
 
-func newKafkaWriter(kafkaURL, topic string) *kafka.Writer {
+func newKafkaWriter(host, topic string) *kafka.Writer {
 	return kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{kafkaURL},
+		Brokers:  []string{host},
 		Topic:    topic,
 		Balancer: &kafka.LeastBytes{},
 	})
@@ -78,11 +78,11 @@ func main() {
 }
 
 func checkArgs(_ *types.Event) error {
-	if len(plugin.KafkaTopic) == 0 {
+	if len(plugin.topic) == 0 {
 		return fmt.Errorf("--topic or KAFKA_TOPIC environment variable is required")
 	}
-	if len(plugin.KafkaURL) == 0 {
-		return fmt.Errorf("--kafka-url or KAFKA_URL environment variable is required")
+	if len(plugin.host) == 0 {
+		return fmt.Errorf("--host or KAFKA_HOST environment variable is required")
 	}
 	return nil
 }
@@ -104,17 +104,17 @@ func executeHandler(event *types.Event) error {
 		fmt.Println(err)
 		return err
 	}
-	writer := newKafkaWriter(plugin.KafkaURL, plugin.KafkaTopic)
+	writer := newKafkaWriter(plugin.host, plugin.topic)
 	defer writer.Close()
 
 	msg := kafka.Message{
 		Key:   idBytes,
 		Value: eventBytes,
 	}
-	if plugin.Dryrun {
+	if plugin.dryrun {
 		fmt.Printf("Dryrun enabled, reporting configured settings\n")
-		fmt.Printf("  Kafka Broker Url: %v\n", plugin.KafkaURL)
-		fmt.Printf("  Kafka Topic: %v\n", plugin.KafkaTopic)
+		fmt.Printf("  Kafka Broker Host: %v\n", plugin.host)
+		fmt.Printf("  Kafka Topic: %v\n", plugin.topic)
 		fmt.Printf("  Kafka Message Key: %s\n", string(idBytes))
 		fmt.Printf("  Kafka Message Value:\n %v\n", string(eventBytes))
 	} else {
