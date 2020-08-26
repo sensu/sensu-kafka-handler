@@ -17,5 +17,9 @@ jobs:
       with:
         go-version: 1.13
       id: go
+    - name: Start Docker containers for Zookeeper, Kafka
+      run: docker-compose -f docker/docker-compose.yml  --project-name kafka up -d
+    - name: Wait for kafka service to be ready
+      run: docker run --network kafka_default -it confluentinc/cp-kafka:5.4.0 cub kafka-ready -b broker:29092 1 120
     - name: Test
       run: go test -v ./...

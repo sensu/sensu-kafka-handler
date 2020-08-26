@@ -8,9 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"os"
 	"reflect"
 	"testing"
@@ -46,16 +43,10 @@ func TestExecute(t *testing.T) {
 	require.NoError(t, err)
 	os.Stdin = file
 
-	var apiStub = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(`{"ok": true}`))
-		require.NoError(t, err)
-	}))
-
-	u, err := url.Parse(apiStub.URL)
-	host := u.Host
+	// Using docker compose to startup kafka server and prepare sensu-events topic
+	host := "localhost:9092"
 	oldArgs := os.Args
-	os.Args = []string{"kafka-handler", "-H", host, "-t", apiStub.URL}
+	os.Args = []string{"kafka-handler", "-H", host, "-t", "sensu-events"}
 	defer func() { os.Args = oldArgs }()
 
 	var exitStatus int
