@@ -32,6 +32,7 @@ var (
 
 	options = []*sensu.PluginConfigOption{
 		&sensu.PluginConfigOption{
+			Path:      "host",
 			Env:       "KAFKA_HOST",
 			Argument:  "host",
 			Shorthand: "H",
@@ -40,6 +41,7 @@ var (
 			Value:     &plugin.host,
 		},
 		&sensu.PluginConfigOption{
+			Path:      "topic",
 			Env:       "KAFKA_TOPIC",
 			Argument:  "topic",
 			Shorthand: "t",
