@@ -36,7 +36,9 @@ services:
     depends_on:
       - broker
     command: "
-      bash -c 'cub kafka-ready -b broker:29092 1 120 && kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic sensu-events'"
+      bash -c 'cub kafka-ready -b broker:29092 1 120 \
+      && kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic sensu-events \
+      && kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic alt-topic'"
     environment:
       KAFKA_BROKER_ID: ignored
       KAFKA_ZOOKEEPER_CONNECT: ignored
