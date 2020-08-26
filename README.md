@@ -1,6 +1,4 @@
-<!---
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/sensu-kafa-handler)
---->
 ![Go Test](https://github.com/sensu/sensu-kafka-handler/workflows/Go%20Test/badge.svg)(https://github.com/sensu/sensu-kafka-handler/actions?query=workflow%3A%22Go+Test%22)
 ![goreleaser](https://github.com/sensu/sensu-kafka-handler/workflows/goreleaser/badge.svg)(https://github.com/sensu/sensu-kafka-handler/actions?query=workflow%3Agoreleaser)
 
@@ -14,9 +12,7 @@
 - [Files](#files)
 - [Usage examples](#usage-examples)
 - [Configuration](#configuration)
-<!---
   - [Asset registration](#asset-registration)
---->
   - [Handler definition](#handler-definition)
   - [Annotations](#annotations)
 - [Installation from source](#installation-from-source)
@@ -57,7 +53,6 @@ Use "sensu-kafa-handler [command] --help" for more information about a command.
 `host` argument should point to the Kafka listener `<host:port>`. Currently only plaintext is supported
 `topic` argument  should match an existing topic already created on the Kafka server.
 
-<!---
 ### Asset registration
 
 [Sensu Assets][10] are the best way to make use of this plugin. If you're not using an asset, please
@@ -70,7 +65,6 @@ sensuctl asset add sensu/sensu-kafa-handler
 
 If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/sensu/sensu-kafa-handler].
 
---->
 
 ### Handler definition
 
