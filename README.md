@@ -1,8 +1,8 @@
 <!---
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/sensu-kafa-handler)
 --->
-![Go Test](https://github.com/sensu/sensu-kafa-handler/workflows/Go%20Test/badge.svg)
-![goreleaser](https://github.com/sensu/sensu-kafa-handler/workflows/goreleaser/badge.svg)
+![Go Test](https://github.com/sensu/sensu-kafka-handler/workflows/Go%20Test/badge.svg)
+![goreleaser](https://github.com/sensu/sensu-kafka-handler/workflows/goreleaser/badge.svg)
 
 
 ***
