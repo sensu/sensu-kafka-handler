@@ -1,4 +1,4 @@
-module github.com/sensu/sensu-kafa-handler
+module github.com/sensu/sensu-kafka-handler
 
 go 1.13
 

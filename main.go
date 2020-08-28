@@ -24,9 +24,9 @@ type Config struct {
 var (
 	plugin = Config{
 		PluginConfig: sensu.PluginConfig{
-			Name:     "sensu-kafa-handler",
+			Name:     "sensu-kafka-handler",
 			Short:    "Sensu handler to convert Sensu events to Kafka messages ",
-			Keyspace: "sensu.io/plugins/sensu-kafa-handler/config",
+			Keyspace: "sensu.io/plugins/sensu-kafka-handler/config",
 		},
 	}
 

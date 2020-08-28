@@ -1,4 +1,4 @@
-[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/sensu-kafa-handler)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/sensu-kafka-handler)
 [![Go Test](https://github.com/sensu/sensu-kafka-handler/workflows/Go%20Test/badge.svg)](https://github.com/sensu/sensu-kafka-handler/actions?query=workflow%3A%22Go+Test%22)
 [![goreleaser](https://github.com/sensu/sensu-kafka-handler/workflows/goreleaser/badge.svg)](https://github.com/sensu/sensu-kafka-handler/actions?query=workflow%3Agoreleaser)
 
@@ -28,12 +28,12 @@ Note handler is in in active development.
 
 ## Usage examples
 ```
-./sensu-kafa-handler --help
+./sensu-kafka-handler --help
 Sensu handler to convert Sensu events to Kafka messages
 
 Usage:
-  sensu-kafa-handler [flags]
-  sensu-kafa-handler [command]
+  sensu-kafka-handler [flags]
+  sensu-kafka-handler [command]
 
 Available Commands:
   help        Help about any command
@@ -41,12 +41,12 @@ Available Commands:
 
 Flags:
   -n, --dryrun         Dryrun, do not connect to Kafka broker
-  -h, --help           help for sensu-kafa-handler
+  -h, --help           help for sensu-kafka-handler
   -H, --host string    The Kafka broker host, defaults to value of KAFKA_HOST env variable (default "localhost:9092")
   -t, --topic string   Kafka topic to post to, defaults to value of KAFKA_TOPIC env variable (default "sensu-event")
   -v, --verbose        Verbose output to stdout, useful for testing
 
-Use "sensu-kafa-handler [command] --help" for more information about a command.
+Use "sensu-kafka-handler [command] --help" for more information about a command.
 
 ```
 ## Configuration
@@ -60,10 +60,10 @@ consider doing so! If you're using sensuctl 5.13 with Sensu Backend 5.13 or late
 following command to add the asset:
 
 ```
-sensuctl asset add sensu/sensu-kafa-handler
+sensuctl asset add sensu/sensu-kafka-handler
 ```
 
-If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/sensu/sensu-kafa-handler].
+If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/sensu/sensu-kafka-handler].
 
 
 ### Handler definition
@@ -73,13 +73,13 @@ If you're using an earlier version of sensuctl, you can find the asset on the [B
 type: Handler
 api_version: core/v2
 metadata:
-  name: sensu-kafa-handler
+  name: sensu-kafka-handler
   namespace: default
 spec:
-  command: sensu-kafa-handler --host localhost:9092 --topic sensu-events
+  command: sensu-kafka-handler --host localhost:9092 --topic sensu-events
   type: pipe
   runtime_assets:
-  - sensu/sensu-kafa-handler
+  - sensu/sensu-kafka-handler
 ```
 
 #### Proxy Support
@@ -92,7 +92,7 @@ either a complete URL or a "host[:port]", in which case the "http" scheme is ass
 ### Annotations
 
 The `host` and `topic` arguments for this handler are tunable on a per entity or check basis based on annotations.  The
-annotations keyspace for this handler is `sensu.io/plugins/sensu-kafa-handler/config`.
+annotations keyspace for this handler is `sensu.io/plugins/sensu-kafka-handler/config`.
 
 #### Examples
 
@@ -103,7 +103,7 @@ type: CheckConfig
 api_version: core/v2
 metadata:
   annotations:
-    sensu.io/plugins/sensu-kafa-handler/config/topic: "custom-topic"
+    sensu.io/plugins/sensu-kafka-handler/config/topic: "custom-topic"
 [...]
 ```
 
@@ -113,7 +113,7 @@ The preferred way of installing and deploying this plugin is to use it as an Ass
 like to compile and install the plugin from source or contribute to it, download the latest version
 or create an executable script from this source.
 
-From the local path of the sensu-kafa-handler repository:
+From the local path of the sensu-kafka-handler repository:
 
 ```
 go build
