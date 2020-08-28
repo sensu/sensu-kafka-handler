@@ -8,6 +8,11 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ## Unreleased
 
 
+## [0.0.2] - 2020-08-28
+
+### Fixed
+-  Fixed typos impacting annotation path
+
 ## [0.0.1] - 2020-08-25
 
 ### Added
