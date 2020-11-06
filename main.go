@@ -126,6 +126,9 @@ func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, enable_tls b
 	}
 	tlsConfig := tls.Config{}
 	tlsConfig.InsecureSkipVerify = skip
+	if skip && verbose {
+		fmt.Println("TLS Verification Skipped! Not recommended for production systems!")
+	}
 	// Load CA cert
 	if len(caCertFile) > 0 {
 		caCert, err := ioutil.ReadFile(caCertFile)
@@ -222,7 +225,7 @@ func executeHandler(event *types.Event) error {
 			return err
 		} else {
 			if plugin.verbose {
-				fmt.Printf("Kafka Wite Message Success!:\n")
+				fmt.Printf("Kafka Write Message Success!:\n")
 				fmt.Printf("  Sensu Event Check Name: %s\n", event.Check.Name)
 				fmt.Printf("  Sensu Event Entity Name: %s\n", event.Entity.Name)
 				fmt.Printf("  Kafka Broker Host: %v\n", plugin.host)
