@@ -133,7 +133,7 @@ func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool) (
 		return &tlsConfig, err
 	}
 	tlsConfig.Certificates = []tls.Certificate{cert}
-
+	//nolint:staticcheck // ignore SA1019 for old code
 	tlsConfig.BuildNameToCertificate()
 	return &tlsConfig, err
 }
