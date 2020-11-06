@@ -7,6 +7,15 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.0.4] - 2020-11-06
+
+### Changed
+- Made it possible to enable TLS without custom certs defined, using just system-wide CA bundle.
+
+## [0.0.3] - 2020-11-06
+
+### Added
+- Initial TLS cert support
 
 ## [0.0.2] - 2020-08-28
 
