@@ -40,11 +40,16 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-  -n, --dryrun         Dryrun, do not connect to Kafka broker
-  -h, --help           help for sensu-kafka-handler
-  -H, --host string    The Kafka broker host, defaults to value of KAFKA_HOST env variable (default "localhost:9092")
-  -t, --topic string   Kafka topic to post to, defaults to value of KAFKA_TOPIC env variable (default "sensu-event")
-  -v, --verbose        Verbose output to stdout, useful for testing
+      --cert-file string           certificate for TLS authenticationin PEM format
+  -n, --dryrun                     Dryrun, do not connect to Kafka broker
+  -e, --enable-tls                 enable TLS encryption
+  -h, --help                       help for sensu-kafka-handler
+  -H, --host string                The Kafka broker host, defaults to value of KAFKA_HOST env variable (default "localhost:9092")
+      --insecure-skip-tls-verify   skip TLS verification (not recommended!)
+      --key-file string            key for TLS authentication in PEM format
+  -t, --topic string               Kafka topic to post to, defaults to value of KAFKA_TOPIC env variable (default "sensu-event")
+      --trusted-ca-file string     TLS CA certificate bundle in PEM format
+  -v, --verbose                    Verbose output to stdout, useful for testing
 
 Use "sensu-kafka-handler [command] --help" for more information about a command.
 
@@ -52,7 +57,7 @@ Use "sensu-kafka-handler [command] --help" for more information about a command.
 ## Configuration
 `host` argument should point to the Kafka listener `<host:port>`. Currently only plaintext is supported
 `topic` argument  should match an existing topic already created on the Kafka server.
-
+ 
 ### Asset registration
 
 [Sensu Assets][10] are the best way to make use of this plugin. If you're not using an asset, please

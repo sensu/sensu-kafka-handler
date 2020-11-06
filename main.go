@@ -25,6 +25,7 @@ type Config struct {
 	verbose    bool
 	dryrun     bool
 	skipverify bool
+	tls        bool
 }
 
 var (
@@ -93,6 +94,13 @@ var (
 			Usage:    "skip TLS verification (not recommended!)",
 			Value:    &plugin.skipverify,
 		},
+		&sensu.PluginConfigOption{
+			Argument:  "enable-tls",
+			Shorthand: "e",
+			Default:   false,
+			Usage:     "enable TLS encryption",
+			Value:     &plugin.tls,
+		},
 	}
 )
 
@@ -109,8 +117,11 @@ func newKafkaWriter(host, topic string, tlsConfig *tls.Config) *kafka.Writer {
 	})
 }
 
-func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool, verbose bool) (*tls.Config, error) {
-	if len(clientCertFile) == 0 && len(clientKeyFile) == 0 && len(caCertFile) == 0 {
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, enable_tls bool, skip bool, verbose bool) (*tls.Config, error) {
+	if len(clientCertFile) > 0 || len(clientKeyFile) > 0 || len(caCertFile) > 0 {
+		enable_tls = true
+	}
+	if !enable_tls {
 		return nil, nil
 	}
 	tlsConfig := tls.Config{}
@@ -141,9 +152,9 @@ func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool, v
 			fmt.Printf("Using certFile: %s\n", clientCertFile)
 			fmt.Printf("Using keyFile: %s\n", clientKeyFile)
 		}
+		//nolint:staticcheck // ignore SA1019 for old code
+		tlsConfig.BuildNameToCertificate()
 	}
-	//nolint:staticcheck // ignore SA1019 for old code
-	tlsConfig.BuildNameToCertificate()
 	return &tlsConfig, nil
 }
 
@@ -183,6 +194,7 @@ func executeHandler(event *types.Event) error {
 	tlsConfig, _ := NewTLSConfig(plugin.certfile,
 		plugin.keyfile,
 		plugin.cafile,
+		plugin.tls,
 		plugin.skipverify,
 		plugin.verbose)
 	if err != nil {
