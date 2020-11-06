@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
-
 	"github.com/google/uuid"
+	"io/ioutil"
 
 	kafka "github.com/segmentio/kafka-go"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
@@ -15,10 +17,14 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	host    string
-	topic   string
-	verbose bool
-	dryrun  bool
+	host       string
+	topic      string
+	cafile     string
+	certfile   string
+	keyfile    string
+	verbose    bool
+	dryrun     bool
+	skipverify bool
 }
 
 var (
@@ -57,21 +63,79 @@ var (
 			Value:     &plugin.verbose,
 		},
 		&sensu.PluginConfigOption{
+			Argument: "trusted-ca-file",
+			Default:  "",
+			Usage:    "TLS CA certificate bundle in PEM format",
+			Value:    &plugin.cafile,
+		},
+		&sensu.PluginConfigOption{
+			Argument: "cert-file",
+			Default:  "",
+			Usage:    "certificate for TLS authenticationin PEM format",
+			Value:    &plugin.certfile,
+		},
+		&sensu.PluginConfigOption{
+			Argument: "key-file",
+			Default:  "",
+			Usage:    "key for TLS authentication in PEM format",
+			Value:    &plugin.keyfile,
+		},
+		&sensu.PluginConfigOption{
 			Argument:  "dryrun",
 			Shorthand: "n",
 			Default:   false,
 			Usage:     "Dryrun, do not connect to Kafka broker",
 			Value:     &plugin.dryrun,
 		},
+		&sensu.PluginConfigOption{
+			Argument: "insecure-skip-tls-verify",
+			Default:  false,
+			Usage:    "skip TLS verification (not recommended!)",
+			Value:    &plugin.skipverify,
+		},
 	}
 )
 
-func newKafkaWriter(host, topic string) *kafka.Writer {
+func newKafkaWriter(host, topic string, tlsConfig *tls.Config) *kafka.Writer {
+	dialer := &kafka.Dialer{
+		DualStack: true,
+		TLS:       tlsConfig,
+	}
 	return kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{host},
 		Topic:    topic,
 		Balancer: &kafka.LeastBytes{},
+		Dialer:   dialer,
 	})
+}
+
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool) (*tls.Config, error) {
+	if len(clientCertFile) == 0 && len(clientKeyFile) == 0 {
+		return nil, nil
+	}
+	tlsConfig := tls.Config{}
+	tlsConfig.InsecureSkipVerify = skip
+	// Load CA cert
+	if len(caCertFile) > 0 {
+		caCert, err := ioutil.ReadFile(caCertFile)
+		if err != nil {
+			fmt.Println("TLS error in caCertFile read")
+			return &tlsConfig, err
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		tlsConfig.RootCAs = caCertPool
+	}
+	// Load client cert
+	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+	if err != nil {
+		fmt.Println("TLS error in LoadX509KeyPair")
+		return &tlsConfig, err
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	tlsConfig.BuildNameToCertificate()
+	return &tlsConfig, err
 }
 
 func main() {
@@ -106,7 +170,17 @@ func executeHandler(event *types.Event) error {
 		fmt.Println(err)
 		return err
 	}
-	writer := newKafkaWriter(plugin.host, plugin.topic)
+
+	tlsConfig, _ := NewTLSConfig(plugin.certfile,
+		plugin.keyfile,
+		plugin.cafile,
+		plugin.skipverify)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	writer := newKafkaWriter(plugin.host, plugin.topic, tlsConfig)
 	defer writer.Close()
 
 	msg := kafka.Message{

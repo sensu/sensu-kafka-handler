@@ -1,4 +1,4 @@
-version: "3.7"
+version: "2"
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:5.4.0
@@ -18,16 +18,11 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:39092,SSL://broker:29092,SSL_HOST://localhost:9092,PLAINTEXT_HOST://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL,SSL_HOST:SSL,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092,SSL://broker:29093,SSL_HOST://localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker1.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker1_keystore_creds
       KAFKA_SSL_KEY_CREDENTIALS: broker1_sslkey_creds
@@ -38,7 +33,11 @@ services:
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SSL
     volumes:
       - ./secrets:/etc/kafka/secrets
-  
+    environment:
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
 
 
   create-topics:
