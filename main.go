@@ -109,8 +109,8 @@ func newKafkaWriter(host, topic string, tlsConfig *tls.Config) *kafka.Writer {
 	})
 }
 
-func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool) (*tls.Config, error) {
-	if len(clientCertFile) == 0 && len(clientKeyFile) == 0 {
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool, verbose bool) (*tls.Config, error) {
+	if len(clientCertFile) == 0 && len(clientKeyFile) == 0 && len(caCertFile) == 0 {
 		return nil, nil
 	}
 	tlsConfig := tls.Config{}
@@ -125,17 +125,26 @@ func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string, skip bool) (
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 		tlsConfig.RootCAs = caCertPool
+		if verbose {
+			fmt.Printf("Using caCertFile: %s\n", caCertFile)
+		}
 	}
 	// Load client cert
-	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
-	if err != nil {
-		fmt.Println("TLS error in LoadX509KeyPair")
-		return &tlsConfig, err
+	if len(clientCertFile) > 0 && len(clientKeyFile) > 0 {
+		cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			fmt.Println("TLS error in LoadX509KeyPair")
+			return &tlsConfig, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+		if verbose {
+			fmt.Printf("Using certFile: %s\n", clientCertFile)
+			fmt.Printf("Using keyFile: %s\n", clientKeyFile)
+		}
 	}
-	tlsConfig.Certificates = []tls.Certificate{cert}
 	//nolint:staticcheck // ignore SA1019 for old code
 	tlsConfig.BuildNameToCertificate()
-	return &tlsConfig, err
+	return &tlsConfig, nil
 }
 
 func main() {
@@ -174,7 +183,8 @@ func executeHandler(event *types.Event) error {
 	tlsConfig, _ := NewTLSConfig(plugin.certfile,
 		plugin.keyfile,
 		plugin.cafile,
-		plugin.skipverify)
+		plugin.skipverify,
+		plugin.verbose)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -198,6 +208,16 @@ func executeHandler(event *types.Event) error {
 		if err != nil {
 			fmt.Println(err)
 			return err
+		} else {
+			if plugin.verbose {
+				fmt.Printf("Kafka Wite Message Success!:\n")
+				fmt.Printf("  Sensu Event Check Name: %s\n", event.Check.Name)
+				fmt.Printf("  Sensu Event Entity Name: %s\n", event.Entity.Name)
+				fmt.Printf("  Kafka Broker Host: %v\n", plugin.host)
+				fmt.Printf("  Kafka Topic: %v\n", plugin.topic)
+				fmt.Printf("  Kafka Message Key: %s\n", string(idBytes))
+				fmt.Printf("  Kafka Message Value:\n %v\n", string(eventBytes))
+			}
 		}
 	}
 	return nil

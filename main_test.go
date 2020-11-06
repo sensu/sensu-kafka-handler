@@ -165,6 +165,101 @@ func TestExecute(t *testing.T) {
 	assert.True(found)
 }
 
+func TestSSLCAOnlyExecute(t *testing.T) {
+	assert := assert.New(t)
+	file, _ := ioutil.TempFile(os.TempDir(), "sensu-kafka-handler-")
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+	entityName := fmt.Sprintf("entity-%v", rand.Int())
+	checkName := fmt.Sprintf("check-%v", rand.Int())
+	event := corev2.FixtureEvent(entityName, checkName)
+	eventJSON, _ := json.Marshal(event)
+	_, err := file.WriteString(string(eventJSON))
+	require.NoError(t, err)
+	require.NoError(t, file.Sync())
+	_, err = file.Seek(0, 0)
+	require.NoError(t, err)
+	os.Stdin = file
+
+	// Using docker compose to startup kafka server and prepare sensu-events topic
+	host := "127.0.0.1:9093"
+	ca := "docker/tls/producer_ca.pem"
+
+	oldArgs := os.Args
+	os.Args = []string{
+		"kafka-handler",
+		"-H", host,
+		"-t", "sensu-events",
+		"--trusted-ca-file", ca,
+		"--insecure-skip-tls-verify",
+		"-v",
+	}
+	defer func() { os.Args = oldArgs }()
+
+	var exitStatus int
+	exitStatus = 0
+	mockExit := func(i int) {
+		exitStatus = i
+	}
+
+	handler := sensu.NewGoHandler(&plugin.PluginConfig, options, checkArgs, executeHandler)
+	field := reflect.ValueOf(handler).Elem().FieldByName("exitFunction")
+	SetUnexportedField(field, mockExit)
+	c1 := make(chan string, 1)
+	go func() {
+		handler.Execute()
+		c1 <- "execute is done"
+	}()
+	select {
+	case <-c1:
+		assert.Zero(exitStatus)
+	case <-time.After(10 * time.Second):
+		fmt.Println("Error: timeout reached in test")
+		assert.True(false)
+	}
+	// to consume messages
+	topic := "sensu-events"
+	partition := 0
+
+	conn, _ := kafka.DialLeader(context.Background(), "tcp", "127.0.0.1:9092", topic, partition)
+
+	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+
+	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
+	b := make([]byte, 10e3)            // 10KB max per message
+	found := false
+	for {
+		_, err := batch.Read(b)
+		if err != nil {
+			break
+		}
+		bstring := strings.TrimRight(string(b), "\x00")
+		e := &types.Event{}
+		err = json.Unmarshal([]byte(bstring), e)
+		if err != nil {
+			fmt.Println(bstring)
+			fmt.Println(err)
+			continue
+		}
+		if e.Entity != nil {
+			if e.Entity.Name == event.Entity.Name {
+				if e.Check != nil {
+					if e.Check.Name == event.Check.Name {
+						fmt.Printf("Found: %v %v\n", e.Entity.Name, e.Check.Name)
+						found = true
+					}
+				}
+			}
+		}
+	}
+	batch.Close()
+	conn.Close()
+	fmt.Println(found)
+	assert.True(found)
+
+}
+
 func TestSSLExecute(t *testing.T) {
 	assert := assert.New(t)
 	file, _ := ioutil.TempFile(os.TempDir(), "sensu-kafka-handler-")
@@ -197,6 +292,7 @@ func TestSSLExecute(t *testing.T) {
 		"--key-file", keyfile,
 		"--trusted-ca-file", ca,
 		"--insecure-skip-tls-verify",
+		"-v",
 	}
 	defer func() { os.Args = oldArgs }()
 
